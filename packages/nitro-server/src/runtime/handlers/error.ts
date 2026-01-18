@@ -1,11 +1,20 @@
 import { joinURL, withQuery, withoutBase } from 'ufo'
 import type { NitroErrorHandler } from 'nitropack/types'
-import { appendResponseHeader, getRequestHeaders, send, setResponseHeader, setResponseHeaders, setResponseStatus } from 'h3'
+import { appendResponseHeader, getRequestHeaders, setResponseHeader, setResponseHeaders, setResponseStatus } from 'h3'
 import type { NuxtPayload } from 'nuxt/app'
 
 import { useNitroApp, useRuntimeConfig } from 'nitropack/runtime'
 import { isJsonRequest } from '../utils/error'
 import { generateErrorOverlayHTML } from '../utils/dev'
+
+// Compatibility function for h3 v2 - replaces the removed 'send' export
+function send(event, data, options) {
+  if (typeof data === 'string') {
+    event.node.res.end(data);
+  } else {
+    event.node.res.end(JSON.stringify(data));
+  }
+}
 
 export default <NitroErrorHandler> async function errorhandler (error, event, { defaultHandler }) {
   if (event.handled || isJsonRequest(event)) {
